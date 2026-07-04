@@ -1,0 +1,422 @@
+{
+  "metadata": {
+    "name": "Malaysian Medical Billing Bundling Rules",
+    "version": "2.0",
+    "sources": [
+      "PHFSA Regulations 2006 (Schedule 13) and MMA MPSN 5th Edition v2.0 (2020)",
+      "Public Accounts Committee (PAC) Statement, Dewan Rakyat, June 25, 2026 — PAC Chairwoman Mas Ermieyati Samsudin and PAC member Dr Halimah Ali",
+      "PAC 1,999-Page Report — Hansard testimony from AIA CEO Heng Zee Wang, June 19, 2025",
+      "Galen Centre for Health & Social Policy (CEO statement)",
+      "MCA Deputy President Dr Mah Hang Soon (public statement)",
+      "Bank Negara Malaysia Annual Report (healthcare cost findings)",
+      "CodeBlue investigative reporting on private hospital billing"
+    ],
+    "description": "Tiered bundling rules defining items and procedure combinations that should NOT be billed as separate line items. Used to detect unbundling and miscoding in Malaysian private hospital bills.",
+    "tier_definitions": {
+      "TIER_1": "PAC Officially Confirmed — stated verbatim in Parliament, June 25, 2026. Highest evidential weight.",
+      "TIER_2": "On Record in PAC 1,999-Page Report — Hansard testimony, parliamentary record. Strong evidential weight.",
+      "TIER_3": "Documented by Health Experts and Media — credible published sources. Moderate evidential weight.",
+      "TIER_4": "Standard Medical Billing Unbundling — industry-standard checks for lab panels and procedure pairs.",
+      "TIER_5": "Price Discrimination Flag — PAC-documented pattern, not unbundling but related overcharging concern."
+    },
+    "flag_message_templates": {
+      "TIER_1": "Parliament's Public Accounts Committee (June 2026) found this item should be included in your room charge, not billed separately.",
+      "TIER_2": "This charge has been identified by health experts and parliamentary testimony as a potential unbundling concern — worth querying with your hospital.",
+      "TIER_3": "This charge has been identified by health experts and parliamentary testimony as a potential unbundling concern — worth querying with your hospital.",
+      "TIER_4": "This appears to be a component of a standard test panel that is typically billed as a single charge — ask your hospital why it appears separately.",
+      "TIER_5": "PAC found that GL patients are sometimes charged more than cash patients for the same treatment. Ask your hospital for the cash-equivalent rate."
+    },
+    "IMPORTANT_READ_FIRST": [
+      "Never label any Tier 2-5 flag as illegal. Only Tier 1 items have explicit parliamentary confirmation.",
+      "Based on PHFSA Schedule 13: all charges shown are maximum chargeable charges.",
+      "Surgical rule: when two procedures are performed through the same incision, the lesser should not exceed 50% of its normal fee."
+    ]
+  },
+
+  "rules": {
+
+    "tier_1_pac_confirmed": {
+      "description": "Items PAC officially stated in Parliament (June 25, 2026) should be included in room charges, not billed separately.",
+      "pac_confirmed": true,
+      "in_hansard": true,
+      "severity": "high",
+      "flag_message": "Parliament's Public Accounts Committee (June 2026) found this item should be included in your room charge, not billed separately.",
+      "items": [
+        {
+          "rule_id": "T1-ROOM-001",
+          "item": "Clinical Waste Disposal",
+          "aliases": ["clinical waste", "waste disposal fee", "biohazard waste", "medical waste charge"],
+          "condition": "Charged as a separate line item on top of daily room/ward fee.",
+          "source": "PAC Statement, Dewan Rakyat, June 25, 2026 — PAC Chairwoman Mas Ermieyati Samsudin"
+        },
+        {
+          "rule_id": "T1-ROOM-002",
+          "item": "Pillowcases / Pillow Covers",
+          "aliases": ["pillowcase", "pillow cover", "pillow linen", "sarung bantal"],
+          "condition": "Charged as a separate line item on top of daily room/ward fee.",
+          "source": "PAC Statement, Dewan Rakyat, June 25, 2026 — PAC Chairwoman Mas Ermieyati Samsudin"
+        },
+        {
+          "rule_id": "T1-ROOM-003",
+          "item": "Alcohol Swabs",
+          "aliases": ["alcohol swab", "alcohol wipe", "antiseptic swab", "swab alkohol"],
+          "condition": "Charged as a separate line item on top of daily room/ward fee.",
+          "source": "PAC Statement, Dewan Rakyat, June 25, 2026 — PAC Chairwoman Mas Ermieyati Samsudin"
+        },
+        {
+          "rule_id": "T1-ROOM-004",
+          "item": "Bedsheets / Bed Linen",
+          "aliases": ["bedsheet", "bed linen", "linen charge", "cadar", "bed sheet fee"],
+          "condition": "Charged as a separate line item on top of daily room/ward fee.",
+          "source": "PAC Statement, Dewan Rakyat, June 25, 2026 — PAC Chairwoman Mas Ermieyati Samsudin and Dr Halimah Ali"
+        }
+      ]
+    },
+
+    "tier_2_hansard_testimony": {
+      "description": "Items on record in the PAC 1,999-page report from Hansard testimony (AIA CEO Heng Zee Wang, June 19, 2025). Not in official PAC statement but in parliamentary record.",
+      "pac_confirmed": false,
+      "in_hansard": true,
+      "severity": "high",
+      "flag_message": "This charge has been identified by health experts and parliamentary testimony as a potential unbundling concern — worth querying with your hospital.",
+      "items": [
+        {
+          "rule_id": "T2-VITAL-001",
+          "item": "Blood Pressure Reading",
+          "aliases": ["blood pressure reading", "BP check", "BP monitoring fee", "bacaan tekanan darah"],
+          "condition": "Billed as a separate line item during inpatient stay where nursing care is already charged.",
+          "source": "PAC 1,999-Page Report — AIA CEO Heng Zee Wang, June 19, 2025"
+        },
+        {
+          "rule_id": "T2-VITAL-002",
+          "item": "Vital Signs Monitoring",
+          "aliases": ["vital signs", "vital sign reading", "vital sign monitoring", "tanda-tanda vital"],
+          "condition": "Billed as a separate line item during inpatient stay where nursing care is already charged.",
+          "source": "PAC 1,999-Page Report — AIA CEO Heng Zee Wang, June 19, 2025"
+        },
+        {
+          "rule_id": "T2-VITAL-003",
+          "item": "Pulse Oximeter Usage Charge",
+          "aliases": ["pulse oximeter", "SpO2 monitoring", "oxygen saturation reading", "pulse ox fee"],
+          "condition": "Charged as a separate equipment usage fee during inpatient stay.",
+          "source": "PAC 1,999-Page Report — AIA CEO Heng Zee Wang, June 19, 2025"
+        },
+        {
+          "rule_id": "T2-VITAL-004",
+          "item": "Thermometer Covers / Thermometer Usage Charge",
+          "aliases": ["thermometer cover", "thermometer fee", "temperature check fee", "disposable thermometer cover"],
+          "condition": "Charged as a separate consumable or usage fee during inpatient stay.",
+          "source": "PAC 1,999-Page Report — AIA CEO Heng Zee Wang, June 19, 2025"
+        },
+        {
+          "rule_id": "T2-OT-001",
+          "item": "Operating Theatre Usage Billed by the Hour",
+          "aliases": ["OT usage per hour", "theatre time charge", "OT hourly rate", "OT time fee"],
+          "condition": "OT usage billed at an hourly rate on top of a flat OT facility fee.",
+          "source": "PAC 1,999-Page Report — AIA CEO Heng Zee Wang, June 19, 2025"
+        },
+        {
+          "rule_id": "T2-OT-002",
+          "item": "OT Table Usage Billed Separately",
+          "aliases": ["OT table fee", "operating table charge", "surgical table usage"],
+          "condition": "Operating table charged as a separate line item in addition to OT facility fee.",
+          "source": "PAC 1,999-Page Report — AIA CEO Heng Zee Wang, June 19, 2025"
+        },
+        {
+          "rule_id": "T2-IV-001",
+          "item": "Nursing Fee for IV Drip Setup",
+          "aliases": ["IV setup fee", "drip setup charge", "IV nursing fee", "titisan IV"],
+          "condition": "Nursing fee for IV drip setup billed separately when ward nursing care is already charged.",
+          "source": "PAC 1,999-Page Report — AIA CEO Heng Zee Wang, June 19, 2025"
+        },
+        {
+          "rule_id": "T2-IV-002",
+          "item": "Needle Insertion Fee",
+          "aliases": ["needle insertion", "IV needle fee", "cannula insertion fee", "bayaran cucuk jarum"],
+          "condition": "Needle insertion billed separately from IV drip charge.",
+          "source": "PAC 1,999-Page Report — AIA CEO Heng Zee Wang, June 19, 2025"
+        },
+        {
+          "rule_id": "T2-IV-003",
+          "item": "Needle Removal Fee",
+          "aliases": ["needle removal", "cannula removal fee", "IV removal charge"],
+          "condition": "Needle removal billed separately from IV drip charge.",
+          "source": "PAC 1,999-Page Report — AIA CEO Heng Zee Wang, June 19, 2025"
+        },
+        {
+          "rule_id": "T2-WASTE-001",
+          "item": "Disposable Garbage Bags",
+          "aliases": ["garbage bag", "waste bag", "disposal bag", "beg sampah"],
+          "condition": "Billed at RM1 per sheet or similar unit charge as a separate line item.",
+          "benchmark_unit_cost": "RM1 per sheet",
+          "source": "PAC 1,999-Page Report — AIA CEO Heng Zee Wang, June 19, 2025"
+        },
+        {
+          "rule_id": "T2-WASTE-002",
+          "item": "Yellow Plastic Bags for Used Syringes",
+          "aliases": ["yellow bag", "sharps bag", "syringe disposal bag", "beg kuning"],
+          "condition": "Billed at RM3 each or similar unit charge as a separate line item.",
+          "benchmark_unit_cost": "RM3 each",
+          "source": "PAC 1,999-Page Report — AIA CEO Heng Zee Wang, June 19, 2025"
+        },
+        {
+          "rule_id": "T2-OT-003",
+          "item": "Plastic Apron Worn by OT Nurse",
+          "aliases": ["OT apron", "nurse apron", "surgical apron", "plastic apron charge"],
+          "condition": "Cost of OT nurse's plastic apron billed to the patient as a separate consumable.",
+          "source": "PAC 1,999-Page Report — AIA CEO Heng Zee Wang, June 19, 2025"
+        }
+      ]
+    },
+
+    "tier_3_expert_documented": {
+      "description": "Items documented by health experts and credible media. Not in parliamentary record but published by credible bodies.",
+      "expert_documented": true,
+      "severity": "medium",
+      "flag_message": "This charge has been identified by health experts and parliamentary testimony as a potential unbundling concern — worth querying with your hospital.",
+      "items": [
+        {
+          "rule_id": "T3-SUPPLY-001",
+          "item": "Disposable Gloves",
+          "aliases": ["disposable gloves", "surgical gloves", "examination gloves", "sarung tangan pakai buang"],
+          "condition": "Charged at inflated unit price (e.g. RM20/pair when market price is ~RM0.50/pair from a box of 100 at ~RM50).",
+          "benchmark": "A box of 100 gloves costs ~RM50 in the market (~RM0.50 per pair). Flag if billed at RM5+ per pair.",
+          "flag_threshold_rm": 5,
+          "source": "Galen Centre CEO, MCA Deputy President Dr Mah Hang Soon (public statements)"
+        },
+        {
+          "rule_id": "T3-SUPPLY-002",
+          "item": "Diapers / Adult Diapers",
+          "aliases": ["diaper", "adult diaper", "incontinence pad", "lampin"],
+          "condition": "Charged at inflated unit price (e.g. RM50/diaper when retail is ~RM6/diaper).",
+          "benchmark": "Retail adult diaper costs ~RM6. Flag if billed above RM15 per unit.",
+          "flag_threshold_rm": 15,
+          "source": "Galen Centre CEO, MCA Deputy President Dr Mah Hang Soon (public statements)"
+        },
+        {
+          "rule_id": "T3-EQUIP-001",
+          "item": "Wheelchair Usage Charge",
+          "aliases": ["wheelchair fee", "wheelchair usage", "kerusi roda"],
+          "condition": "Charged as a separate usage fee during inpatient stay or discharge.",
+          "source": "Galen Centre for Health & Social Policy"
+        },
+        {
+          "rule_id": "T3-EQUIP-002",
+          "item": "Heart Monitor / Cardiac Monitor Usage Charge",
+          "aliases": ["cardiac monitor", "heart monitor fee", "ECG monitor usage", "monitor jantung"],
+          "condition": "Cardiac monitor usage billed as a separate daily equipment fee in addition to ICU/ward fees.",
+          "source": "Galen Centre for Health & Social Policy"
+        },
+        {
+          "rule_id": "T3-EQUIP-003",
+          "item": "Kidney Dish Usage Charge",
+          "aliases": ["kidney dish", "kidney tray", "stainless tray", "dulang buah pinggang"],
+          "condition": "Stainless steel kidney dish billed as a separate consumable or usage charge.",
+          "source": "CodeBlue investigative reporting"
+        },
+        {
+          "rule_id": "T3-NURSING-001",
+          "item": "Wound Dressing Charge",
+          "aliases": ["wound dressing", "dressing charge", "balutan luka", "wound care fee"],
+          "condition": "Wound dressing billed separately on the same day nursing care is already charged for non-complex wounds.",
+          "source": "Standard medical billing practices, Galen Centre"
+        },
+        {
+          "rule_id": "T3-NURSING-002",
+          "item": "Nebulisation Charge",
+          "aliases": ["nebulisation fee", "nebulizer charge", "nebulasi"],
+          "condition": "Nebulisation administration fee billed separately when ward nursing care is already charged for the same day.",
+          "source": "Standard medical billing practices, Galen Centre"
+        },
+        {
+          "rule_id": "T3-NURSING-003",
+          "item": "Physiotherapy Session",
+          "aliases": ["physiotherapy", "physio fee", "fisioterapi"],
+          "condition": "Physiotherapy billed separately when bundled into the ward charge for that day.",
+          "source": "BNM Annual Report healthcare cost findings"
+        },
+        {
+          "rule_id": "T3-ROOM-001",
+          "item": "Meals Billed Separately",
+          "aliases": ["meal charge", "food charge", "meals fee", "breakfast charge", "bayaran makan"],
+          "condition": "Meals billed as separate line items for patients in rooms where meals should be included in the room rate.",
+          "source": "Galen Centre for Health & Social Policy, CodeBlue"
+        }
+      ]
+    },
+
+    "tier_4_billing_standard": {
+      "description": "Industry-standard unbundling checks for lab panels and procedure pairs.",
+      "billing_standard": true,
+      "severity": "medium",
+      "flag_message": "This appears to be a component of a standard test panel that is typically billed as a single charge — ask your hospital why it appears separately.",
+
+      "lab_panel_rules": [
+        {
+          "rule_id": "T4-LAB-FBC",
+          "panel": "Full Blood Count (FBC)",
+          "panel_aliases": ["fbc", "full blood count", "complete blood count", "cbc", "darah penuh"],
+          "components_that_should_not_be_billed_individually": [
+            "WBC count", "white blood cell count", "white cell count",
+            "RBC count", "red blood cell count",
+            "haemoglobin", "hemoglobin", "Hb level",
+            "platelet count", "platelets",
+            "MCV", "mean corpuscular volume",
+            "MCH", "mean corpuscular haemoglobin"
+          ],
+          "condition": "One or more individual FBC components appear as separate line items instead of a single FBC panel charge.",
+          "source": "Standard lab billing practices"
+        },
+        {
+          "rule_id": "T4-LAB-LFT",
+          "panel": "Liver Function Test (LFT)",
+          "panel_aliases": ["lft", "liver function", "hepatic panel", "ujian fungsi hati"],
+          "components_that_should_not_be_billed_individually": [
+            "bilirubin", "total bilirubin", "direct bilirubin",
+            "ALT", "alanine aminotransferase", "SGPT",
+            "AST", "aspartate aminotransferase", "SGOT",
+            "ALP", "alkaline phosphatase",
+            "albumin", "total protein",
+            "GGT", "gamma GT"
+          ],
+          "condition": "One or more individual LFT components appear as separate line items instead of a single LFT panel charge.",
+          "source": "Standard lab billing practices"
+        },
+        {
+          "rule_id": "T4-LAB-RFT",
+          "panel": "Renal Function Test (RFT / U&E)",
+          "panel_aliases": ["rft", "renal function", "kidney function", "u&e", "urea electrolytes", "ujian fungsi buah pinggang"],
+          "components_that_should_not_be_billed_individually": [
+            "creatinine", "serum creatinine",
+            "urea", "blood urea nitrogen", "BUN",
+            "sodium", "Na",
+            "potassium", "K",
+            "chloride", "Cl",
+            "bicarbonate", "HCO3"
+          ],
+          "condition": "One or more individual RFT components appear as separate line items instead of a single RFT panel charge.",
+          "source": "Standard lab billing practices"
+        },
+        {
+          "rule_id": "T4-LAB-LIPID",
+          "panel": "Lipid Profile Panel",
+          "panel_aliases": ["lipid profile", "lipid panel", "cholesterol panel", "profil lipid"],
+          "components_that_should_not_be_billed_individually": [
+            "total cholesterol",
+            "LDL", "LDL cholesterol", "low density lipoprotein",
+            "HDL", "HDL cholesterol", "high density lipoprotein",
+            "triglycerides", "TG"
+          ],
+          "condition": "One or more individual lipid components appear as separate line items instead of a single lipid panel charge.",
+          "source": "Standard lab billing practices"
+        }
+      ],
+
+      "procedure_pair_rules": [
+        {
+          "rule_id": "T4-PROC-ECG",
+          "description": "ECG recording and ECG interpretation both billed separately.",
+          "procedure_a": "ECG Recording",
+          "procedure_a_aliases": ["ecg recording", "ecg trace", "ekg recording", "rekod ecg"],
+          "procedure_b": "ECG Interpretation",
+          "procedure_b_aliases": ["ecg interpretation", "ecg reading", "ekg report", "laporan ecg"],
+          "condition": "Both appear on the same bill billed by the same doctor on the same date.",
+          "flag_message": "This appears to be a component of a standard test panel that is typically billed as a single charge — ask your hospital why it appears separately.",
+          "source": "Standard medical billing practices (MPSN context)"
+        },
+        {
+          "rule_id": "T4-PROC-CONSULT",
+          "description": "Specialist ward visit and outpatient consultation both billed on the same date.",
+          "procedure_a": "Specialist Inpatient Ward Visit",
+          "procedure_a_aliases": ["ward visit", "ward round", "inpatient visit", "lawatan wad"],
+          "procedure_b": "Specialist Outpatient Consultation",
+          "procedure_b_aliases": ["outpatient consultation", "specialist consultation", "clinic visit", "perundingan pakar"],
+          "condition": "Both billed on the same date for the same specialist.",
+          "flag_message": "This charge has been identified by health experts and parliamentary testimony as a potential unbundling concern — worth querying with your hospital.",
+          "source": "PHFSA Schedule 13 professional fee logic"
+        },
+        {
+          "rule_id": "T4-PROC-IV",
+          "description": "IV line insertion fee and IV line maintenance fee both billed separately.",
+          "procedure_a": "IV Cannula Insertion",
+          "procedure_a_aliases": ["iv insertion", "cannula insertion", "drip insertion", "cucuk IV"],
+          "procedure_b": "IV Line Maintenance / Flushing",
+          "procedure_b_aliases": ["iv maintenance", "iv flushing", "drip maintenance", "iv line charge"],
+          "condition": "Both appear on the same bill on the same date.",
+          "flag_message": "This appears to be a component of a standard test panel that is typically billed as a single charge — ask your hospital why it appears separately.",
+          "source": "Standard medical billing practices"
+        },
+        {
+          "rule_id": "T4-PROC-SUTURE",
+          "description": "Wound suture fee and suture removal fee both billed separately.",
+          "procedure_a": "Wound Suturing / Repair",
+          "procedure_a_aliases": ["suture", "stitches", "laceration repair", "jahit luka"],
+          "procedure_b": "Suture Removal",
+          "procedure_b_aliases": ["suture removal", "stitch removal", "tanggal jahitan"],
+          "condition": "Both billed by the same facility within the normal healing window (7-14 days).",
+          "flag_message": "This appears to be a component of a standard test panel that is typically billed as a single charge — ask your hospital why it appears separately.",
+          "source": "MMA MPSN Guidelines"
+        },
+        {
+          "rule_id": "T4-PROC-ANAES",
+          "description": "Anaesthesia pre-assessment fee and surgical anaesthesia fee both billed separately.",
+          "procedure_a": "Surgical Anaesthesiologist Fee",
+          "procedure_a_aliases": ["anaesthesia fee", "anaesthetist fee", "bayaran anestesia"],
+          "procedure_b": "Anaesthesia Pre-Assessment Consultation",
+          "procedure_b_aliases": ["pre-op assessment", "pre-anaesthesia check", "anaesthesia pre-assessment"],
+          "condition": "Routine pre-op check by the same anaesthetist billed separately just before surgery.",
+          "flag_message": "This appears to be a component of a standard test panel that is typically billed as a single charge — ask your hospital why it appears separately.",
+          "source": "MMA MPSN Guidelines"
+        },
+        {
+          "rule_id": "T4-PROC-DRESSING",
+          "description": "Wound dressing charge and nursing care charge both billed on the same day.",
+          "procedure_a": "Ward Nursing Care Charge",
+          "procedure_a_aliases": ["nursing care", "nursing charge", "ward nursing", "bayaran jururawat"],
+          "procedure_b": "Wound Dressing",
+          "procedure_b_aliases": ["wound dressing", "dressing change", "balutan luka"],
+          "condition": "Both billed on the same day during inpatient stay for non-complex wounds.",
+          "flag_message": "This appears to be a component of a standard test panel that is typically billed as a single charge — ask your hospital why it appears separately.",
+          "source": "Standard medical billing practices"
+        },
+        {
+          "rule_id": "T4-PROC-DRUG-DUP",
+          "description": "Duplicate drug entries — same active molecule billed under different brand names.",
+          "condition": "Same active ingredient (e.g. Paracetamol) billed under two different brand names on the same date without clinical justification.",
+          "examples": [
+            {"molecule": "Paracetamol", "brands": ["Panadol", "Uphamol", "Paracil", "Metacin"]},
+            {"molecule": "Omeprazole", "brands": ["Losec", "Omez"]},
+            {"molecule": "Metformin", "brands": ["Glucophage", "Diabex"]}
+          ],
+          "flag_message": "This appears to be a component of a standard test panel that is typically billed as a single charge — ask your hospital why it appears separately.",
+          "source": "Clinical pharmacology standard practices"
+        },
+        {
+          "rule_id": "T4-SURG-INCISION",
+          "description": "Two surgical procedures performed through the same incision — lesser must not exceed 50% of major.",
+          "condition": "Two procedures billed at full fee through the same surgical incision site.",
+          "flag_message": "This appears to be a component of a standard test panel that is typically billed as a single charge — ask your hospital why it appears separately.",
+          "regulatory_rule": "When two procedures are performed through the same incision, the fee for the lesser procedure must not exceed 50% of its normal Schedule 13 maximum fee.",
+          "source": "PHFSA Schedule 13 Regulations"
+        }
+      ]
+    },
+
+    "tier_5_price_discrimination": {
+      "description": "PAC-documented price discrimination pattern — not unbundling but a related overcharging concern.",
+      "type": "price_discrimination",
+      "severity": "medium",
+      "flag_message": "PAC found that GL patients are sometimes charged more than cash patients for the same treatment. Ask your hospital for the cash-equivalent rate.",
+      "items": [
+        {
+          "rule_id": "T5-GL-001",
+          "item": "Guarantee Letter (GL) Patient Surcharge",
+          "detection_signal": "Bill header or patient type field shows 'GL', 'Guarantee Letter', 'GL Patient', or insurer/TPA name.",
+          "condition": "Patient is covered by insurance or employer GL — PAC found GL patients are sometimes charged more than cash patients for identical treatment.",
+          "advice": "Request the cash-rate equivalent bill and compare line items. If prices differ for the same treatment, query the hospital administration.",
+          "source": "PAC 1,999-Page Report, June 2025"
+        }
+      ]
+    }
+  }
+}

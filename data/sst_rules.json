@@ -1,0 +1,89 @@
+{
+  "metadata": {
+    "name": "Malaysian SST Compliance Rules for Private Healthcare",
+    "version": "1.0",
+    "source": "Royal Malaysian Customs Department Service Tax Policy No. 5/2025 Amendment No. 2 (23 October 2025)",
+    "description": "Rules for checking Sales and Service Tax (SST) compliance on Malaysian private hospital bills effective 1 July 2025.",
+    "IMPORTANT_READ_FIRST": [
+      "A 6% SST applies to private healthcare facilities with total taxable revenue exceeding RM1.5 million.",
+      "Specific categories (e.g. professional doctor consultations) are EXEMPT from SST.",
+      "For the exemption to apply, the consultation fee must be separated from other charges in the same invoice."
+    ]
+  },
+  "exempt_categories": [
+    {
+      "category_name": "Doctor Consultation Fees",
+      "reason_for_exemption": "Consultation fees charged by professional doctors at registered private healthcare facilities are explicitly exempt.",
+      "source": "Service Tax Policy No. 5/2025 Amendment No. 2",
+      "verified": true
+    },
+    {
+      "category_name": "Traditional and Complementary Medicine",
+      "reason_for_exemption": "Services provided by registered traditional and complementary medicine practitioners are exempt.",
+      "source": "Service Tax Policy No. 5/2025 Amendment No. 2",
+      "verified": true
+    },
+    {
+      "category_name": "Allied Health Services",
+      "reason_for_exemption": "Services provided by registered allied health professionals (e.g., physiotherapists, dietitians) are exempt.",
+      "source": "Service Tax Policy No. 5/2025 Amendment No. 2",
+      "verified": true
+    }
+  ],
+  "taxable_categories": [
+    {
+      "category_name": "Facility Charges",
+      "description": "General facility usage charges in the private hospital.",
+      "verified": true
+    },
+    {
+      "category_name": "Accommodation / Ward Charges",
+      "description": "Daily room and board charges for inpatient stays.",
+      "verified": true
+    },
+    {
+      "category_name": "Equipment Charges",
+      "description": "Charges for the use of medical equipment (e.g., MRI, CT scan machines).",
+      "verified": true
+    },
+    {
+      "category_name": "Non-Consultation Hospital Services",
+      "description": "Administrative, food & beverage, and other non-medical services provided by the hospital.",
+      "verified": true
+    }
+  ],
+  "flag_rules": [
+    {
+      "rule_id": "SST-EXEMPT-001",
+      "description": "SST charged on an exempt category item.",
+      "condition": "A 6% SST is applied to a line item that falls under 'Doctor Consultation Fees' or other exempt categories.",
+      "flag_message": "SST Compliance Violation: SST is being charged on a doctor's professional consultation fee. These fees are explicitly exempt from SST under STP 5/2025.",
+      "severity": "high",
+      "verified": true
+    },
+    {
+      "rule_id": "SST-RATE-001",
+      "description": "SST rate applied is above 6%.",
+      "condition": "The calculated tax rate on a taxable item exceeds the gazetted 6% rate.",
+      "flag_message": "SST Compliance Violation: The tax rate applied exceeds the legally gazetted 6% Service Tax rate.",
+      "severity": "high",
+      "verified": true
+    },
+    {
+      "rule_id": "SST-THRESHOLD-001",
+      "description": "SST appearing on a bill from a facility below the revenue threshold.",
+      "condition": "SST is charged by a small standalone clinic that is unlikely to meet the RM1.5 million annual revenue threshold.",
+      "flag_message": "Potential SST Violation: Facility is charging SST but may not meet the RM1.5M revenue threshold to be a registered SST entity. Verify facility SST registration number.",
+      "severity": "medium",
+      "verified": false
+    },
+    {
+      "rule_id": "SST-BUNDLE-001",
+      "description": "Consultation fee is not separated from taxable charges on the invoice.",
+      "condition": "A single bundled line item includes both a doctor's consultation fee and a taxable hospital service, with SST applied to the total.",
+      "flag_message": "SST Compliance Warning: To qualify for the consultation fee SST exemption, the consultation fee must be billed as a separate line item from other taxable charges.",
+      "severity": "medium",
+      "verified": true
+    }
+  ]
+}

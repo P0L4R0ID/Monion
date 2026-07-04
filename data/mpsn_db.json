@@ -1,0 +1,506 @@
+{
+  "metadata": {
+    "name": "MPSN-Compatible Procedure Reference Database",
+    "version": "1.0-demo",
+    "description": "A structured sample database compatible with MMA MPSN (Medical Procedures and Services Nomenclature) Version 2.0 (2020). Built for the Sabah Smart City medical bill checker hackathon MVP.",
+    "copyright_notice": "The full MMA MPSN database is copyright of the Malaysian Medical Association (MMA). Reproduction requires written permission from MMA (secretary@mma.org.my). This file is a DEMO-ONLY compatible schema with sample entries — it does NOT reproduce copyrighted MPSN content. For production, a full MPSN licence must be obtained from MMA.",
+    "how_to_get_full_database": "Contact MMA: 4th Floor, MMA House, 124 Jalan Pahang, Kuala Lumpur. Email: secretary@mma.org.my. Apply in writing for a licence to use MPSN data.",
+    "pitch_note": "For judges: this database is intentionally structured to be MPSN-compatible. In production, this would be populated with the full licensed MPSN v2.0 dataset from MMA — our proposed partner. The schema and flagging logic are the same; only the data density changes.",
+    "mpsn_structure_overview": {
+      "Part_A": "Consultation fees and general medical procedures (outpatient, inpatient, specialty-specific)",
+      "Part_B": "Surgical procedures classified into 25 categories (Minor 1 through Complex Major 5), with a separate anaesthesiologist fee code per procedure",
+      "lookup_tables": "5x5 Look-Up Tables map surgical procedure categories to fee amounts for both surgeon and anaesthesiologist",
+      "source": "MMA MPSN 5th Edition, Version 2.0 (2020), publicly described in MSA journal and Scribd overview documents"
+    },
+    "surgical_categories_part_b": {
+      "description": "The 25 surgical categories from MPSN Part B, from least to most complex. Each procedure in Part B is assigned one of these categories. The category determines the maximum fee from Schedule 13.",
+      "categories": [
+        "MINOR1", "MINOR2",
+        "INT1", "INT2", "INT3",
+        "MAJ1", "MAJ2", "MAJ3", "MAJ4",
+        "MAJP1", "MAJP2", "MAJP3",
+        "CMO1", "CMO2", "CMO3", "CMO4", "CMO5"
+      ],
+      "note": "Actual RM fee values per category are set in Schedule 13 of PHFSA 2006 (gazetted, public). Sample fee ranges below are indicative — verify against the gazetted document."
+    },
+    "schedule_13_category_fee_reference": {
+      "MINOR1": {"surgeon_max_rm": 300, "anaes_max_rm": 150, "verified": false},
+      "MINOR2": {"surgeon_max_rm": 500, "anaes_max_rm": 200, "verified": false},
+      "INT1":   {"surgeon_max_rm": 800, "anaes_max_rm": 300, "verified": false},
+      "INT2":   {"surgeon_max_rm": 1200, "anaes_max_rm": 450, "verified": false},
+      "INT3":   {"surgeon_max_rm": 1800, "anaes_max_rm": 650, "verified": false},
+      "MAJ1":   {"surgeon_max_rm": 2500, "anaes_max_rm": 900, "verified": false},
+      "MAJ2":   {"surgeon_max_rm": 3500, "anaes_max_rm": 1200, "verified": false},
+      "MAJ3":   {"surgeon_max_rm": 5000, "anaes_max_rm": 1800, "verified": false},
+      "MAJ4":   {"surgeon_max_rm": 7000, "anaes_max_rm": 2500, "verified": false},
+      "MAJP1":  {"surgeon_max_rm": 9000, "anaes_max_rm": 3200, "verified": false},
+      "MAJP2":  {"surgeon_max_rm": 12000, "anaes_max_rm": 4200, "verified": false},
+      "MAJP3":  {"surgeon_max_rm": 15000, "anaes_max_rm": 5500, "verified": false},
+      "CMO1":   {"surgeon_max_rm": 20000, "anaes_max_rm": 7000, "verified": false},
+      "CMO2":   {"surgeon_max_rm": 25000, "anaes_max_rm": 9000, "verified": false},
+      "CMO3":   {"surgeon_max_rm": 30000, "anaes_max_rm": 11000, "verified": false},
+      "CMO4":   {"surgeon_max_rm": 38000, "anaes_max_rm": 14000, "verified": false},
+      "CMO5":   {"surgeon_max_rm": 50000, "anaes_max_rm": 18000, "verified": false},
+      "IMPORTANT": "All fee values above are INDICATIVE ONLY. Must be replaced with exact values from the gazetted Schedule 13 document before production use."
+    },
+    "fee_rule_from_phfsa": {
+      "multiple_procedures_same_incision": "The lesser procedure must not exceed 50% of the fee for the major procedure",
+      "repeat_procedure": "Second repeat <= 50% of first; third repeat <= 25% of first",
+      "local_anaesthetic_by_operator": "Additional charge not exceeding 20% of the procedure fee may be levied",
+      "source": "PHFSA Regulations 2006, Schedule 13, Regulation 433 — gazetted, public"
+    },
+    "currency": "MYR",
+    "last_updated": "2026-07-04"
+  },
+
+  "procedures": [
+
+    {
+      "demo_code": "A-CONS-GP-001",
+      "name": "Outpatient consultation — General Practitioner, initial visit",
+      "aliases": ["gp consultation", "general practitioner visit", "doctor visit", "yuran perundingan doktor", "consultation fee"],
+      "part": "A",
+      "section": "Consultation",
+      "specialty": "General Practice",
+      "schedule_ref": "Schedule 7 (GP clinics) / Schedule 13 Part A (GP in private hospital)",
+      "schedule_13_max_fee": 125,
+      "schedule_7_max_fee": 125,
+      "government_rate_rm": 1,
+      "reference_type": "legal_cap",
+      "verified": true,
+      "flag_rules": [
+        "OVERCHARGE: billed > 125 (above legal cap)",
+        "UPCODE_CHECK: verify this is truly a GP, not a specialist — if a specialist consultation is billed at GP rates to understate charges, that is also a miscoding"
+      ],
+      "notes": "Most common line item on outpatient bills. The RM30-125 range reflects complexity; simple visits near RM30, complex near RM125."
+    },
+
+    {
+      "demo_code": "A-CONS-SP-001",
+      "name": "Outpatient consultation — Specialist, initial visit",
+      "aliases": ["specialist consultation", "specialist visit", "consultant fee", "specialist fee", "pakar perunding"],
+      "part": "A",
+      "section": "Consultation",
+      "specialty": "All specialties",
+      "schedule_ref": "Schedule 13 Part A",
+      "schedule_13_max_fee": 235,
+      "schedule_7_max_fee": null,
+      "government_rate_rm": 5,
+      "reference_type": "legal_cap",
+      "verified": true,
+      "flag_rules": [
+        "OVERCHARGE: billed > 235 (above legal cap)",
+        "DUPLICATE: same specialist consultation billed twice same date",
+        "UPCODE: GP visit billed as specialist visit"
+      ],
+      "notes": "If a patient sees multiple specialists in one admission, each may bill separately — each capped at RM235 initial."
+    },
+
+    {
+      "demo_code": "A-CONS-SP-002",
+      "name": "Outpatient consultation — Specialist, follow-up visit",
+      "aliases": ["specialist follow up", "review visit", "specialist review", "follow-up consultation"],
+      "part": "A",
+      "section": "Consultation",
+      "specialty": "All specialties",
+      "schedule_ref": "Schedule 13 Part A",
+      "schedule_13_max_fee": 150,
+      "schedule_7_max_fee": null,
+      "government_rate_rm": 5,
+      "reference_type": "legal_cap",
+      "verified": false,
+      "flag_rules": [
+        "OVERCHARGE: billed > 150",
+        "UPCODE: follow-up billed as initial visit to charge higher rate — very common error"
+      ],
+      "notes": "VERIFY exact Schedule 13 follow-up cap before production use."
+    },
+
+    {
+      "demo_code": "A-CONS-WV-001",
+      "name": "Ward visit — specialist, daily inpatient review",
+      "aliases": ["ward visit", "daily visit", "inpatient visit", "ward round", "lawatan wad"],
+      "part": "A",
+      "section": "Consultation",
+      "specialty": "All specialties",
+      "schedule_ref": "Schedule 13 Part A",
+      "schedule_13_max_fee": 100,
+      "government_rate_rm": 0,
+      "reference_type": "legal_cap",
+      "verified": false,
+      "flag_rules": [
+        "DUPLICATE: ward visit billed on same day as outpatient consultation (usually should not both appear)",
+        "OVERCHARGE: billed > 100 per daily ward visit",
+        "QUANTITY: more ward visit charges than inpatient days — impossible"
+      ],
+      "notes": "Verify exact cap. A common error: ward visit billed AND outpatient consultation billed on the same date."
+    },
+
+    {
+      "demo_code": "A-PROC-ECG-001",
+      "name": "Electrocardiogram (ECG / EKG)",
+      "aliases": ["ecg", "ekg", "electrocardiogram", "heart tracing", "rekod jantung"],
+      "part": "A",
+      "section": "General Procedures",
+      "specialty": "General / Cardiology",
+      "schedule_ref": "Schedule 13 Part A — General Procedures",
+      "schedule_13_max_fee": 80,
+      "government_rate_rm": 10,
+      "reference_type": "legal_cap",
+      "verified": false,
+      "flag_rules": [
+        "BUNDLING: ECG is often considered part of a consultation — check if it should be bundled",
+        "DUPLICATE: ECG billed multiple times on same day without clinical justification"
+      ],
+      "notes": "Verify exact Schedule 13 cap. ECG interpretation and ECG recording are sometimes billed separately — watch for double billing."
+    },
+
+    {
+      "demo_code": "A-PROC-NEB-001",
+      "name": "Nebulisation treatment",
+      "aliases": ["nebulisation", "nebulizer", "nebulizer treatment", "inhaler treatment", "nebulasi"],
+      "part": "A",
+      "section": "General Procedures",
+      "specialty": "General / Respiratory",
+      "schedule_ref": "Schedule 13 Part A",
+      "schedule_13_max_fee": 50,
+      "government_rate_rm": 5,
+      "reference_type": "legal_cap",
+      "verified": false,
+      "flag_rules": [
+        "QUANTITY: more than 3-4 nebulisations per day unusual — flag for review",
+        "DUPLICATE: billed separately when included in ward nursing care"
+      ],
+      "notes": "Common in paediatric and respiratory admissions."
+    },
+
+    {
+      "demo_code": "A-PROC-IV-001",
+      "name": "Intravenous (IV) line insertion and maintenance",
+      "aliases": ["iv drip", "iv line", "intravenous drip", "drip", "titisan intravena"],
+      "part": "A",
+      "section": "General Procedures",
+      "specialty": "General",
+      "schedule_ref": "Schedule 13 Part A",
+      "schedule_13_max_fee": 60,
+      "government_rate_rm": 5,
+      "reference_type": "legal_cap",
+      "verified": false,
+      "flag_rules": [
+        "UNBUNDLING: IV insertion sometimes billed separately when it should be included in ward/procedure fee",
+        "QUANTITY: IV line re-siting charged multiple times — confirm it was genuinely re-sited"
+      ],
+      "notes": "IV fluid itself (e.g. Normal Saline, Dextrose) is a drug/consumable charge, separate from the IV insertion procedure."
+    },
+
+    {
+      "demo_code": "A-PROC-WC-001",
+      "name": "Wound dressing / wound care",
+      "aliases": ["wound dressing", "dressing", "wound care", "rawatan luka", "balutan luka"],
+      "part": "A",
+      "section": "General Procedures",
+      "specialty": "General / Surgery",
+      "schedule_ref": "Schedule 13 Part A",
+      "schedule_13_max_fee": 80,
+      "government_rate_rm": 5,
+      "reference_type": "legal_cap",
+      "verified": false,
+      "flag_rules": [
+        "DUPLICATE: wound dressing billed daily PLUS included in nursing charge — possible double billing",
+        "QUANTITY: unusually high frequency — flag for review"
+      ],
+      "notes": "Dressing materials (gauze, bandage) may be billed separately as consumables."
+    },
+
+    {
+      "demo_code": "A-PROC-CAT-001",
+      "name": "Urinary catheterisation",
+      "aliases": ["catheter", "catheterisation", "urinary catheter", "kateter"],
+      "part": "A",
+      "section": "General Procedures",
+      "specialty": "General / Urology",
+      "schedule_ref": "Schedule 13 Part A",
+      "schedule_13_max_fee": 80,
+      "government_rate_rm": 5,
+      "reference_type": "legal_cap",
+      "verified": false,
+      "flag_rules": [
+        "DUPLICATE: catheter insertion AND catheter maintenance billed separately — check if one fee should be inclusive"
+      ],
+      "notes": "Catheter bag and tubing are consumables billed separately."
+    },
+
+    {
+      "demo_code": "A-PROC-SUL-001",
+      "name": "Wound suturing / laceration repair",
+      "aliases": ["suture", "stitches", "laceration repair", "wound closure", "jahit luka"],
+      "part": "A",
+      "section": "General Procedures",
+      "specialty": "General / Surgery / Emergency",
+      "schedule_ref": "Schedule 13 Part A — minor surgical procedure",
+      "schedule_13_max_fee": 300,
+      "government_rate_rm": 10,
+      "reference_type": "legal_cap",
+      "verified": false,
+      "flag_rules": [
+        "UPCODE: simple suture billed at complex laceration repair rate",
+        "UNBUNDLING: suture removal billed separately when it should be included in the original suture fee"
+      ],
+      "notes": "Fee depends on wound complexity and number of sutures."
+    },
+
+    {
+      "demo_code": "A-IMG-XR-001",
+      "name": "Chest X-ray (PA view)",
+      "aliases": ["chest xray", "chest x-ray", "cxr", "x-ray dada", "radiograph dada"],
+      "part": "A",
+      "section": "Radiology / Imaging",
+      "specialty": "Radiology",
+      "schedule_ref": "Schedule 13 Part A — Radiology",
+      "schedule_13_max_fee": 100,
+      "government_rate_rm": 10,
+      "reference_type": "legal_cap",
+      "verified": false,
+      "flag_rules": [
+        "DUPLICATE: chest X-ray billed twice in same admission without justification",
+        "UNBUNDLING: X-ray 'taking' fee and radiologist 'reading' fee both billed — sometimes normal, sometimes double-billing"
+      ],
+      "notes": "Radiologist interpretation fee may legitimately appear as a separate line."
+    },
+
+    {
+      "demo_code": "A-IMG-USS-001",
+      "name": "Ultrasound — abdomen",
+      "aliases": ["abdominal ultrasound", "ultrasound abdomen", "uss abdomen", "usg abdomen", "ultrasound perut"],
+      "part": "A",
+      "section": "Radiology / Imaging",
+      "specialty": "Radiology",
+      "schedule_ref": "Schedule 13 Part A — Radiology",
+      "schedule_13_max_fee": 250,
+      "government_rate_rm": 30,
+      "reference_type": "legal_cap",
+      "verified": false,
+      "flag_rules": [
+        "UPCODE: limited scan billed as complete abdominal ultrasound",
+        "DUPLICATE: same-region ultrasound repeated same day without documented clinical reason"
+      ],
+      "notes": "Obstetric ultrasound has separate codes."
+    },
+
+    {
+      "demo_code": "A-IMG-CT-001",
+      "name": "CT scan — brain / head",
+      "aliases": ["ct scan", "ct brain", "computed tomography", "ct head", "imbasan ct"],
+      "part": "A",
+      "section": "Radiology / Imaging",
+      "specialty": "Radiology",
+      "schedule_ref": "Schedule 13 Part A — Radiology",
+      "schedule_13_max_fee": 1200,
+      "government_rate_rm": 100,
+      "reference_type": "legal_cap",
+      "verified": false,
+      "flag_rules": [
+        "UPCODE: plain CT billed at contrast-enhanced CT rate (higher)",
+        "DUPLICATE: CT of same region repeated within short period without justification"
+      ],
+      "notes": "Contrast agent (dye) may legitimately be charged separately as a drug/consumable."
+    },
+
+    {
+      "demo_code": "A-LAB-FBC-001",
+      "name": "Full Blood Count (FBC)",
+      "aliases": ["fbc", "full blood count", "complete blood count", "cbc", "darah penuh", "blood test"],
+      "part": "A",
+      "section": "Pathology / Laboratory",
+      "specialty": "Pathology",
+      "schedule_ref": "Schedule 13 Part A — Pathology",
+      "schedule_13_max_fee": 60,
+      "government_rate_rm": 5,
+      "reference_type": "legal_cap",
+      "verified": false,
+      "flag_rules": [
+        "DUPLICATE: FBC billed multiple times same day without documented clinical need",
+        "UNBUNDLING: individual components of FBC (WBC, RBC, platelets) billed separately instead of as a panel"
+      ],
+      "notes": "Most common lab test ordered on admission."
+    },
+
+    {
+      "demo_code": "A-LAB-RFT-001",
+      "name": "Renal Function Test (RFT / U&E)",
+      "aliases": ["renal function test", "rft", "kidney function test", "urea electrolytes", "u&e", "ujian fungsi buah pinggang"],
+      "part": "A",
+      "section": "Pathology / Laboratory",
+      "specialty": "Pathology",
+      "schedule_ref": "Schedule 13 Part A — Pathology",
+      "schedule_13_max_fee": 60,
+      "government_rate_rm": 5,
+      "reference_type": "legal_cap",
+      "verified": false,
+      "flag_rules": [
+        "UNBUNDLING: creatinine, urea, electrolytes billed individually instead of as a panel"
+      ],
+      "notes": ""
+    },
+
+    {
+      "demo_code": "A-LAB-LFT-001",
+      "name": "Liver Function Test (LFT)",
+      "aliases": ["liver function test", "lft", "hepatic panel", "ujian fungsi hati"],
+      "part": "A",
+      "section": "Pathology / Laboratory",
+      "specialty": "Pathology",
+      "schedule_ref": "Schedule 13 Part A — Pathology",
+      "schedule_13_max_fee": 70,
+      "government_rate_rm": 5,
+      "reference_type": "legal_cap",
+      "verified": false,
+      "flag_rules": [
+        "UNBUNDLING: bilirubin, ALT, AST billed separately instead of as LFT panel"
+      ],
+      "notes": ""
+    },
+
+    {
+      "demo_code": "A-LAB-RBS-001",
+      "name": "Random Blood Sugar (RBS / blood glucose)",
+      "aliases": ["blood glucose", "blood sugar", "rbs", "fbs", "random blood sugar", "gula darah"],
+      "part": "A",
+      "section": "Pathology / Laboratory",
+      "specialty": "Pathology",
+      "schedule_ref": "Schedule 13 Part A — Pathology",
+      "schedule_13_max_fee": 25,
+      "government_rate_rm": 3,
+      "reference_type": "legal_cap",
+      "verified": false,
+      "flag_rules": [
+        "QUANTITY: blood glucose checked many times per day for non-diabetic patient — flag for review"
+      ],
+      "notes": ""
+    },
+
+    {
+      "demo_code": "A-LAB-UFA-001",
+      "name": "Urine Full Examination / UFEME",
+      "aliases": ["urine test", "ufeme", "urine full examination", "urinalysis", "ujian air kencing"],
+      "part": "A",
+      "section": "Pathology / Laboratory",
+      "specialty": "Pathology",
+      "schedule_ref": "Schedule 13 Part A — Pathology",
+      "schedule_13_max_fee": 30,
+      "government_rate_rm": 3,
+      "reference_type": "legal_cap",
+      "verified": false,
+      "flag_rules": [
+        "UNBUNDLING: dipstick test billed separately AND microscopy billed separately when UFEME covers both"
+      ],
+      "notes": ""
+    },
+
+    {
+      "demo_code": "B-SURG-APP-001",
+      "name": "Appendicectomy (open or laparoscopic)",
+      "aliases": ["appendicectomy", "appendix surgery", "appendix removal", "apendisektomi"],
+      "part": "B",
+      "section": "Abdominal Surgery",
+      "specialty": "General Surgery",
+      "mpsn_category": "MAJ2",
+      "schedule_ref": "Schedule 13 Part B — Surgical Procedures",
+      "schedule_13_max_fee_indicative": 3500,
+      "government_rate_rm": 200,
+      "reference_type": "legal_cap",
+      "verified": false,
+      "flag_rules": [
+        "ANAES_CHECK: anaesthesiologist fee must be cross-checked against the anaesthesiologist's fee look-up table for MAJ2 category",
+        "MULTIPLE_PROCEDURE: if another procedure done at same time, the lesser must be <= 50% of major"
+      ],
+      "notes": "Laparoscopic vs open may have different MPSN codes — flag if billing code does not match operation notes."
+    },
+
+    {
+      "demo_code": "B-SURG-CS-001",
+      "name": "Caesarean section (C-section)",
+      "aliases": ["caesarean section", "c-section", "cs", "cesarean", "pembedahan caesar"],
+      "part": "B",
+      "section": "Obstetrics / Gynaecology",
+      "specialty": "Obstetrics & Gynaecology",
+      "mpsn_category": "MAJ3",
+      "schedule_ref": "Schedule 13 Part B — Surgical Procedures",
+      "schedule_13_max_fee_indicative": 5000,
+      "government_rate_rm": 500,
+      "reference_type": "legal_cap",
+      "verified": false,
+      "flag_rules": [
+        "UPCODE: elective C-section billed at emergency/complex rate",
+        "UNBUNDLING: obstetrician fee, paediatric standby fee, and anaesthetic fee should all be separate — check for double-billing of any component",
+        "ANAES_CHECK: anaesthesia should be epidural or spinal — cross-check with anaesthesiologist fee"
+      ],
+      "notes": "Facility charges (OT, ward, consumables) are SEPARATE from this professional fee and are not regulated."
+    },
+
+    {
+      "demo_code": "B-SURG-CABG-001",
+      "name": "Coronary artery bypass graft (CABG)",
+      "aliases": ["bypass surgery", "cabg", "coronary bypass", "heart bypass", "bypass koronari"],
+      "part": "B",
+      "section": "Cardiothoracic Surgery",
+      "specialty": "Cardiothoracic Surgery",
+      "mpsn_category": "CMO3",
+      "schedule_ref": "Schedule 13 Part B — Surgical Procedures",
+      "schedule_13_max_fee_indicative": 30000,
+      "government_rate_rm": 4000,
+      "reference_type": "legal_cap",
+      "verified": false,
+      "flag_rules": [
+        "MULTIPLE_PROCEDURE: if valve replacement done simultaneously, lesser procedure <= 50% of major",
+        "ANAES_CHECK: complex anaesthesia fee expected — verify against CMO3 look-up table"
+      ],
+      "notes": "Private total bill (including facility, ICU, devices) typically RM25,000-80,000. The Schedule 13 cap only covers the surgeon's professional fee."
+    },
+
+    {
+      "demo_code": "NON-MPSN-WARD-001",
+      "name": "Ward accommodation charge per day",
+      "aliases": ["ward charge", "bed charge", "room charge", "accommodation fee", "daily room rate", "bayaran bilik"],
+      "part": "NON-MPSN",
+      "section": "Facility / Hospital Charges",
+      "specialty": "N/A",
+      "mpsn_category": null,
+      "schedule_ref": "NOT regulated. Set by individual private hospitals. MPSN does not cover facility/hotel charges.",
+      "schedule_13_max_fee": null,
+      "government_rate_rm": 3,
+      "reference_type": "market_range",
+      "market_range_min": 300,
+      "market_range_max": 1500,
+      "verified": false,
+      "flag_rules": [
+        "BENCHMARK: flag if significantly above the hospital's OWN published rate card",
+        "QUANTITY: ward days billed exceed actual admission duration — check against admission/discharge dates",
+        "DUPLICATE: ward charge AND room charge appearing as separate line items for same day"
+      ],
+      "notes": "Ward charges are NOT covered by MPSN or Schedule 13 — hospitals set their own rates. Government third-class ward is RM3/day (Fees Medical Order 2017). Flag on quantity mismatch, not price (since no legal cap exists)."
+    },
+
+    {
+      "demo_code": "NON-MPSN-DRUG-001",
+      "name": "Drug / Medication charges (generic reference)",
+      "aliases": ["medication", "ubat", "drugs", "medicine", "pharmacy charge"],
+      "part": "NON-MPSN",
+      "section": "Pharmacy / Drugs",
+      "specialty": "N/A",
+      "mpsn_category": null,
+      "schedule_ref": "NOT regulated. Reference: Malaysia Medicine Price Guide (MyPriMe), MOH Pharmaceutical Services Programme. https://pharmacy.moh.gov.my/en/apps/drug-price",
+      "schedule_13_max_fee": null,
+      "government_rate_rm": 0,
+      "reference_type": "advisory_benchmark",
+      "verified": false,
+      "flag_rules": [
+        "BENCHMARK: compare billed price per unit against MyPriMe suggested retail price",
+        "QUANTITY: quantity billed implausible for length of stay or condition (e.g. 30 tablets of antibiotic for a 2-day admission)",
+        "DUPLICATE: same drug appearing twice as different line items (e.g. branded and generic of same molecule)"
+      ],
+      "notes": "See reference_prices.json for specific verified drug entries (Paracetamol, Amoxicillin, Cetirizine, Diclofenac) sourced from MyPriMe Aug 2025."
+    }
+
+  ]
+}
